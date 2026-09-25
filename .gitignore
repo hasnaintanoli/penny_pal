@@ -43,3 +43,23 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# ============================================
+# Private / Sensitive Files — DO NOT PUBLISH
+# ============================================
+
+# Reference design images (internal use only)
+assets/ref images/
+
+# Project SRS / Design documents
+*.pdf
+PennyPal_Multi-Platform App Computing_SRS.pdf
+
+# Environment / secrets
+.env
+.env.*
+*.key
+*.pem
+secrets.json
+google-services.json
+GoogleService-Info.plist
