@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../constants/app_assets.dart';
 import '../constants/app_colors.dart';
+import '../services/auth_service.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/google_logo.dart';
 
@@ -69,17 +70,32 @@ class _LoginScreenState extends State<LoginScreen> {
           _passwordController.text,
         );
       } else {
-        // Default simulated authentication
-        await Future.delayed(const Duration(milliseconds: 1200));
+        // Authenticate via AuthService to determine student vs admin role
+        final role = await AuthService.instance.login(
+          identifier: _identifierController.text.trim(),
+          password: _passwordController.text,
+        );
+
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Login successful! Welcome back to PennyPal.'),
-              backgroundColor: AppColors.accentGreen,
-              duration: Duration(seconds: 2),
-            ),
-          );
-          Navigator.of(context).pushReplacementNamed('/home');
+          if (role == UserRole.administrator) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Welcome, Administrator! Opening PennyPal Admin Portal...'),
+                backgroundColor: AppColors.primaryBlue,
+                duration: Duration(seconds: 2),
+              ),
+            );
+            Navigator.of(context).pushReplacementNamed('/admin');
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Login successful! Welcome back to PennyPal.'),
+                backgroundColor: AppColors.accentGreen,
+                duration: Duration(seconds: 2),
+              ),
+            );
+            Navigator.of(context).pushReplacementNamed('/home');
+          }
         }
       }
     } catch (e) {

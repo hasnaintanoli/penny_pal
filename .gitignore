@@ -45,7 +45,7 @@ app.*.map.json
 /android/app/release
 
 # ============================================
-# Private / Sensitive Files — DO NOT PUBLISH
+# Private / Sensitive Files & Backend Secrets — DO NOT PUBLISH
 # ============================================
 
 # Reference design images (internal use only)
@@ -61,5 +61,19 @@ PennyPal_Multi-Platform App Computing_SRS.pdf
 *.key
 *.pem
 secrets.json
-google-services.json
-GoogleService-Info.plist
+
+# Firebase configuration & secret credentials
+**/google-services.json
+**/GoogleService-Info.plist
+*service-account*.json
+*firebase-adminsdk*.json
+.firebase/
+firebase-debug.log*
+firestore-debug.log*
+ui-debug.log*
+
+# Android signing keys & properties
+key.properties
+*.jks
+*.keystore
+

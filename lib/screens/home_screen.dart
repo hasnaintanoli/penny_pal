@@ -2,8 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../constants/app_assets.dart';
 import '../constants/app_colors.dart';
+import '../services/transaction_service.dart';
 import '../widgets/spending_donut_chart.dart';
 import '../widgets/liquid_glass_bottom_nav_bar.dart';
+import 'add_transaction_screen.dart';
+import 'learning_screen.dart';
+import 'ai_assistant_screen.dart';
+import 'notifications_screen.dart';
+import 'more_screen.dart';
+import 'budget_screen.dart';
+import 'goals_screen.dart';
+import 'reports_screen.dart';
 
 /// Model representing a transaction record.
 class TransactionRecord {
@@ -150,9 +159,9 @@ class _HomeScreenState extends State<HomeScreen> {
     ];
   }
 
-  double get _totalIncome => 18000.0;
-  double get _totalExpenses => 5550.0;
-  double get _totalBalance => _totalIncome - _totalExpenses;
+  double get _totalIncome => TransactionService.instance.totalIncome;
+  double get _totalExpenses => TransactionService.instance.totalExpenses;
+  double get _totalBalance => TransactionService.instance.totalBalance;
 
   List<SpendingCategoryData> get _spendingCategories => const [
     SpendingCategoryData(
@@ -214,66 +223,71 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      key: _scaffoldKey,
-      backgroundColor: const Color(0xFFF5F7FA),
-      drawer: _buildDrawer(),
-      body: SafeArea(
-        bottom: false,
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 520),
-            child: Column(
-              children: [
-                // Top Header / Navigation
-                _buildTopHeader(),
+    return AnimatedBuilder(
+      animation: TransactionService.instance,
+      builder: (context, _) {
+        return Scaffold(
+          key: _scaffoldKey,
+          backgroundColor: const Color(0xFFF5F7FA),
+          drawer: _buildDrawer(),
+          body: SafeArea(
+            bottom: false,
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 520),
+                child: Column(
+                  children: [
+                    // Top Header / Navigation
+                    _buildTopHeader(),
 
-                // Scrollable Content
-                Expanded(
-                  child: SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16.0,
-                      vertical: 8.0,
+                    // Scrollable Content
+                    Expanded(
+                      child: SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16.0,
+                          vertical: 8.0,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // B. Greeting Section
+                            _buildGreetingSection(),
+                            const SizedBox(height: 65),
+
+                            // C. Total Balance Card
+                            _buildTotalBalanceCard(),
+                            const SizedBox(height: 20),
+
+                            // D. Quick Action Buttons
+                            _buildQuickActionsSection(),
+                            const SizedBox(height: 20),
+
+                            // E. Spending Overview Section
+                            _buildSpendingOverviewSection(),
+                            const SizedBox(height: 20),
+
+                            // F. Savings Goals Section
+                            _buildSavingsGoalsSection(),
+                            const SizedBox(height: 20),
+
+                            // G. Recent Transactions Section
+                            _buildRecentTransactionsSection(),
+                            SizedBox(height: widget.showBottomNav ? 24 : 85),
+                          ],
+                        ),
+                      ),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // B. Greeting Section
-                        _buildGreetingSection(),
-                        const SizedBox(height: 65),
 
-                        // C. Total Balance Card
-                        _buildTotalBalanceCard(),
-                        const SizedBox(height: 20),
-
-                        // D. Quick Action Buttons
-                        _buildQuickActionsSection(),
-                        const SizedBox(height: 20),
-
-                        // E. Spending Overview Section
-                        _buildSpendingOverviewSection(),
-                        const SizedBox(height: 20),
-
-                        // F. Savings Goals Section
-                        _buildSavingsGoalsSection(),
-                        const SizedBox(height: 20),
-
-                        // G. Recent Transactions Section
-                        _buildRecentTransactionsSection(),
-                        SizedBox(height: widget.showBottomNav ? 24 : 85),
-                      ],
-                    ),
-                  ),
+                    // H. Bottom Navigation Bar
+                    if (widget.showBottomNav) _buildBottomNavigationBar(),
+                  ],
                 ),
-
-                // H. Bottom Navigation Bar
-                if (widget.showBottomNav) _buildBottomNavigationBar(),
-              ],
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -344,7 +358,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 clipBehavior: Clip.none,
                 children: [
                   InkWell(
-                    onTap: _showNotificationsSheet,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const NotificationsScreen(),
+                        ),
+                      );
+                    },
                     borderRadius: BorderRadius.circular(10),
                     child: Container(
                       padding: const EdgeInsets.all(6),
@@ -373,7 +394,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
               // User Profile Avatar
               GestureDetector(
-                onTap: _showProfileSheet,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const MoreScreen()),
+                  );
+                },
                 child: Container(
                   width: 36,
                   height: 36,
@@ -808,51 +834,77 @@ class _HomeScreenState extends State<HomeScreen> {
         icon: Icons.add_rounded,
         iconColor: AppColors.actionGreenIcon,
         bgColor: AppColors.actionGreenBg,
-        onTap: () => _showAddTransactionModal(isIncome: true),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const AddTransactionScreen(initialIsIncome: true),
+            ),
+          );
+        },
       ),
       _QuickActionData(
         title: 'Add Expense',
         icon: Icons.remove_rounded,
         iconColor: AppColors.actionRedIcon,
         bgColor: AppColors.actionRedBg,
-        onTap: () => _showAddTransactionModal(isIncome: false),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) =>
+                  const AddTransactionScreen(initialIsIncome: false),
+            ),
+          );
+        },
       ),
       _QuickActionData(
         title: 'Set Budget',
         icon: Icons.account_balance_wallet_rounded,
         iconColor: AppColors.actionBlueIcon,
         bgColor: AppColors.actionBlueBg,
-        onTap: () => _showFeaturePlaceholder(
-          'Set Budget',
-          'Plan monthly category spending limits and get smart alerts before overspending.',
-        ),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const BudgetScreen()),
+          );
+        },
       ),
       _QuickActionData(
         title: 'Savings Goals',
         icon: Icons.track_changes_rounded,
         iconColor: AppColors.actionPurpleIcon,
         bgColor: AppColors.actionPurpleBg,
-        onTap: _showSavingsGoalsModal,
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const GoalsScreen()),
+          );
+        },
       ),
       _QuickActionData(
         title: 'Learn',
         icon: Icons.menu_book_rounded,
         iconColor: AppColors.actionAmberIcon,
         bgColor: AppColors.actionAmberBg,
-        onTap: () => _showFeaturePlaceholder(
-          'Financial Learning',
-          'Access bite-sized student guides on budgeting, investing, student loans, and smart saving.',
-        ),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const LearningScreen()),
+          );
+        },
       ),
       _QuickActionData(
         title: 'AI Assistant',
         icon: Icons.smart_toy_rounded,
         iconColor: AppColors.actionSkyIcon,
         bgColor: AppColors.actionSkyBg,
-        onTap: () => _showFeaturePlaceholder(
-          'Penny AI Assistant',
-          'Your 24/7 personal student financial advisor. Ask how to save on groceries, track receipts, and plan your college budget!',
-        ),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const AIAssistantScreen()),
+          );
+        },
       ),
     ];
 
@@ -1445,9 +1497,9 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             onTap: () {
               Navigator.pop(context);
-              _showFeaturePlaceholder(
-                'Financial Learning',
-                'Explore student finance tutorials.',
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const LearningScreen()),
               );
             },
           ),
@@ -1462,20 +1514,46 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             onTap: () {
               Navigator.pop(context);
-              _showFeaturePlaceholder(
-                'Penny AI',
-                'Chat with your AI financial advisor.',
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const AIAssistantScreen()),
+              );
+            },
+          ),
+          ListTile(
+            leading: const Icon(
+              Icons.insights_rounded,
+              color: AppColors.textSecondary,
+            ),
+            title: Text(
+              'Reports & Analytics',
+              style: GoogleFonts.poppins(fontSize: 13.5),
+            ),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ReportsScreen()),
               );
             },
           ),
           const Divider(),
           ListTile(
             leading: const Icon(
-              Icons.settings_rounded,
+              Icons.more_horiz_rounded,
               color: AppColors.textSecondary,
             ),
-            title: Text('Settings', style: GoogleFonts.poppins(fontSize: 13.5)),
-            onTap: () => Navigator.pop(context),
+            title: Text(
+              'More & Settings',
+              style: GoogleFonts.poppins(fontSize: 13.5),
+            ),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const MoreScreen()),
+              );
+            },
           ),
           ListTile(
             leading: const Icon(Icons.logout_rounded, color: AppColors.error),
@@ -1515,177 +1593,6 @@ class _HomeScreenState extends State<HomeScreen> {
     _showFeaturePlaceholder(
       label,
       'The $label feature is actively synchronized with your PennyPal student account.',
-    );
-  }
-
-  void _showAddTransactionModal({required bool isIncome}) {
-    final titleController = TextEditingController();
-    final descController = TextEditingController();
-    final amountController = TextEditingController();
-    String selectedCategory = isIncome ? 'Freelance Work' : 'Food & Dining';
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) {
-        return Padding(
-          padding: EdgeInsets.only(
-            left: 20,
-            right: 20,
-            top: 20,
-            bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: isIncome
-                          ? AppColors.actionGreenBg
-                          : AppColors.actionRedBg,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      isIncome ? Icons.add_rounded : Icons.remove_rounded,
-                      color: isIncome ? AppColors.accentGreen : AppColors.error,
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Text(
-                    isIncome ? 'Add New Income' : 'Add New Expense',
-                    style: GoogleFonts.poppins(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: titleController,
-                decoration: InputDecoration(
-                  labelText: 'Title / Category',
-                  hintText: isIncome
-                      ? 'e.g., Allowance, Freelance'
-                      : 'e.g., McDonald\'s, Groceries',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: descController,
-                decoration: InputDecoration(
-                  labelText: 'Merchant / Description',
-                  hintText: 'e.g., Semester Project, Bus Fare',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: amountController,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  labelText: 'Amount (PKR)',
-                  hintText: 'e.g., 500',
-                  prefixText: 'Rs. ',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: isIncome
-                        ? AppColors.accentGreen
-                        : AppColors.primaryBlue,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                  onPressed: () {
-                    final enteredAmount =
-                        double.tryParse(amountController.text.trim()) ?? 0;
-                    if (enteredAmount > 0 &&
-                        titleController.text.trim().isNotEmpty) {
-                      setState(() {
-                        _transactions.insert(
-                          0,
-                          TransactionRecord(
-                            id: 'TXN-${DateTime.now().millisecondsSinceEpoch % 10000}',
-                            title: titleController.text.trim(),
-                            description: descController.text.trim().isNotEmpty
-                                ? descController.text.trim()
-                                : selectedCategory,
-                            date: 'Today',
-                            amount: enteredAmount,
-                            isIncome: isIncome,
-                            icon: isIncome
-                                ? Icons.account_balance_wallet_rounded
-                                : Icons.shopping_bag_rounded,
-                            iconColor: isIncome
-                                ? AppColors.accentGreen
-                                : AppColors.error,
-                            iconBgColor: isIncome
-                                ? AppColors.actionGreenBg
-                                : AppColors.actionRedBg,
-                          ),
-                        );
-                      });
-                      Navigator.pop(ctx);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            '${isIncome ? "Income" : "Expense"} of Rs. ${_formatCurrency(enteredAmount)} added successfully!',
-                            style: GoogleFonts.poppins(),
-                          ),
-                          backgroundColor: AppColors.accentGreen,
-                        ),
-                      );
-                    }
-                  },
-                  child: Text(
-                    isIncome ? 'Save Income' : 'Save Expense',
-                    style: GoogleFonts.poppins(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
     );
   }
 
@@ -1975,134 +1882,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 );
               }),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  void _showNotificationsSheet() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) {
-        return Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Notifications',
-                style: GoogleFonts.poppins(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 12),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: const CircleAvatar(
-                  backgroundColor: Color(0xFFECFDF5),
-                  child: Icon(
-                    Icons.savings_rounded,
-                    color: AppColors.accentGreen,
-                  ),
-                ),
-                title: Text(
-                  'Goal Update',
-                  style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-                ),
-                subtitle: Text(
-                  'Emergency Fund goal completed! Great job saving.',
-                  style: GoogleFonts.poppins(fontSize: 12),
-                ),
-              ),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: const CircleAvatar(
-                  backgroundColor: Color(0xFFEFF6FF),
-                  child: Icon(Icons.bolt_rounded, color: AppColors.primaryBlue),
-                ),
-                title: Text(
-                  'Monthly Budget',
-                  style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-                ),
-                subtitle: Text(
-                  'You have spent 34% on Food & Dining this May.',
-                  style: GoogleFonts.poppins(fontSize: 12),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  void _showProfileSheet() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) {
-        return Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CircleAvatar(
-                radius: 32,
-                backgroundColor: const Color(0xFFE0E7FF),
-                child: Text(
-                  widget.userName.isNotEmpty
-                      ? widget.userName[0].toUpperCase()
-                      : 'H',
-                  style: GoogleFonts.poppins(
-                    fontSize: 26,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.primaryBlue,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                widget.userName,
-                style: GoogleFonts.poppins(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              Text(
-                'Student Member • TechWiz 2026',
-                style: GoogleFonts.poppins(
-                  fontSize: 12.5,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryBlue,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  onPressed: () => Navigator.pop(ctx),
-                  child: Text(
-                    'Done',
-                    style: GoogleFonts.poppins(color: Colors.white),
-                  ),
-                ),
-              ),
             ],
           ),
         );

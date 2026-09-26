@@ -36,4 +36,8 @@ class AppAssets {
   /// Transparent goals card background illustration for summary card.
   static const String goalsCardBackground =
       'assets/images/goals-card-background-transparent.png';
+
+  /// 3D Wallet illustration with gold coins, card, and leaves for Add Transaction screen.
+  static const String addTransactionWallet =
+      'assets/images/36e1e2a0-6fb2-4dd0-b476-32d32adccc28.png';
 }

@@ -3,6 +3,9 @@ import 'package:google_fonts/google_fonts.dart';
 import '../constants/app_assets.dart';
 import '../constants/app_colors.dart';
 import '../widgets/liquid_glass_bottom_nav_bar.dart';
+import 'create_goal_screen.dart';
+import 'learning_screen.dart';
+import 'reports_screen.dart';
 
 /// Model representing a savings goal in PennyPal.
 class GoalItem {
@@ -874,14 +877,22 @@ class _GoalsScreenState extends State<GoalsScreen> {
         icon: Icons.add_rounded,
         iconColor: Colors.white,
         circleColor: const Color(0xFF10B981),
-        onTap: _showCreateGoalBottomSheet,
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const CreateGoalScreen()),
+          );
+        },
       ),
       _ActionBtnData(
         title: 'View\nProgress',
         icon: Icons.bar_chart_rounded,
         iconColor: Colors.white,
         circleColor: const Color(0xFF0077F6),
-        onTap: () => _showActionSnackbar('Progress Analytics'),
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const ReportsScreen()),
+          );
+        },
       ),
       _ActionBtnData(
         title: 'Achieved\nGoals',
@@ -895,7 +906,11 @@ class _GoalsScreenState extends State<GoalsScreen> {
         icon: Icons.lightbulb_rounded,
         iconColor: Colors.white,
         circleColor: const Color(0xFFF59E0B),
-        onTap: _showGoalTipsModal,
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const LearningScreen()),
+          );
+        },
       ),
     ];
 
@@ -1777,93 +1792,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
     );
   }
 
-  void _showGoalTipsModal() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) {
-        return Padding(
-          padding: const EdgeInsets.all(22.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Smart Savings Tips',
-                style: GoogleFonts.poppins(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                'Proven rules of thumb to reach financial milestones faster.',
-                style: GoogleFonts.poppins(
-                  fontSize: 12,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-              const SizedBox(height: 14),
-              _buildTipRow(
-                Icons.schedule_rounded,
-                'Automate Transfers',
-                'Set aside a fixed amount on the 1st of every month.',
-              ),
-              const SizedBox(height: 10),
-              _buildTipRow(
-                Icons.trending_down_rounded,
-                'Cut Micro-Expenses',
-                'Cooking at home 2 days extra saves Rs. 3,000+ monthly.',
-              ),
-              const SizedBox(height: 10),
-              _buildTipRow(
-                Icons.flag_rounded,
-                'Milestone Rewards',
-                'Celebrate reaching 50% progress with guilt-free treats.',
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryBlue,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                  child: Text(
-                    'Got It',
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
+
 
   void _showAchievedGoalsModal() {
     showModalBottomSheet(
@@ -1990,45 +1919,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
     );
   }
 
-  Widget _buildTipRow(IconData icon, String title, String subtitle) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: 32,
-          height: 32,
-          decoration: const BoxDecoration(
-            color: Color(0xFFEBF3FE),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, color: AppColors.primaryBlue, size: 18),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: GoogleFonts.poppins(
-                  fontSize: 12.5,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              Text(
-                subtitle,
-                style: GoogleFonts.poppins(
-                  fontSize: 11,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
+
 
   Widget _buildDetailRow(String label, String value) {
     return Row(

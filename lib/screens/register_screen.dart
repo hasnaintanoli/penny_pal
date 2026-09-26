@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../constants/app_colors.dart';
+import '../services/auth_service.dart';
 import '../widgets/custom_text_field.dart';
 
 /// The official PennyPal Registration / Create Account Screen.
@@ -69,8 +70,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
           password: _passwordController.text,
         );
       } else {
-        // Default simulated registration
-        await Future.delayed(const Duration(milliseconds: 1400));
+        // Register via AuthService (Firebase Auth + Firestore)
+        await AuthService.instance.register(
+          fullName: _fullNameController.text.trim(),
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+          mobileNumber: _mobileController.text.trim(),
+        );
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -79,8 +86,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
               duration: Duration(seconds: 2),
             ),
           );
-          // Navigate to Login or Home
-          Navigator.of(context).pushReplacementNamed('/login');
+          // Navigate to Home
+          Navigator.of(context).pushReplacementNamed('/home');
         }
       }
     } catch (e) {

@@ -2,34 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../constants/app_assets.dart';
 import '../constants/app_colors.dart';
+import '../services/transaction_service.dart';
 import '../widgets/liquid_glass_bottom_nav_bar.dart';
-
-/// Model representing an individual transaction record in PennyPal.
-class TransactionItem {
-  final String id;
-  final String category;
-  final String description;
-  final String dateOrTime;
-  final double amount;
-  final bool isIncome;
-  final String transactionType; // 'all', 'income', 'expense', 'transfer'
-  final IconData icon;
-  final Color iconColor;
-  final Color iconBgColor;
-
-  const TransactionItem({
-    required this.id,
-    required this.category,
-    required this.description,
-    required this.dateOrTime,
-    required this.amount,
-    required this.isIncome,
-    this.transactionType = 'expense',
-    required this.icon,
-    required this.iconColor,
-    required this.iconBgColor,
-  });
-}
+import 'add_transaction_screen.dart';
 
 /// PennyPal Transactions Screen displaying detailed transaction history,
 /// interactive category filters, search, and the decorative Total Balance card.
@@ -61,100 +36,30 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     'January 2025',
   ];
 
-  late List<TransactionItem> _allTransactions;
-
   @override
   void initState() {
     super.initState();
-    _initTransactionsData();
+    TransactionService.instance.addListener(_onTransactionsUpdated);
   }
 
   @override
   void dispose() {
+    TransactionService.instance.removeListener(_onTransactionsUpdated);
     _searchController.dispose();
     super.dispose();
   }
 
-  void _initTransactionsData() {
-    _allTransactions = [
-      const TransactionItem(
-        id: 'TXN-001',
-        category: 'Food & Dining',
-        description: "McDonald's",
-        dateOrTime: '10:24 AM',
-        amount: 450,
-        isIncome: false,
-        transactionType: 'expense',
-        icon: Icons.restaurant_rounded,
-        iconColor: Color(0xFFEF4444),
-        iconBgColor: Color(0xFFFEECEC),
-      ),
-      const TransactionItem(
-        id: 'TXN-002',
-        category: 'Freelance Work',
-        description: 'Upwork Payment',
-        dateOrTime: '09:15 AM',
-        amount: 8000,
-        isIncome: true,
-        transactionType: 'income',
-        icon: Icons.work_rounded,
-        iconColor: Color(0xFF10B981),
-        iconBgColor: Color(0xFFE8F8F2),
-      ),
-      const TransactionItem(
-        id: 'TXN-003',
-        category: 'Transport',
-        description: 'Bus Fare',
-        dateOrTime: '08:42 AM',
-        amount: 200,
-        isIncome: false,
-        transactionType: 'expense',
-        icon: Icons.directions_bus_rounded,
-        iconColor: Color(0xFF8B5CF6),
-        iconBgColor: Color(0xFFF3E8FF),
-      ),
-      const TransactionItem(
-        id: 'TXN-004',
-        category: 'Shopping',
-        description: 'Daraz',
-        dateOrTime: '06:30 PM',
-        amount: 1250,
-        isIncome: false,
-        transactionType: 'expense',
-        icon: Icons.shopping_bag_rounded,
-        iconColor: Color(0xFF0077F6),
-        iconBgColor: Color(0xFFEBF3FE),
-      ),
-      const TransactionItem(
-        id: 'TXN-005',
-        category: 'Salary',
-        description: 'HBL Bank',
-        dateOrTime: 'May 13, 2025',
-        amount: 15000,
-        isIncome: true,
-        transactionType: 'income',
-        icon: Icons.account_balance_wallet_rounded,
-        iconColor: Color(0xFF10B981),
-        iconBgColor: Color(0xFFE8F8F2),
-      ),
-      const TransactionItem(
-        id: 'TXN-006',
-        category: 'Education',
-        description: 'Book Purchase',
-        dateOrTime: 'May 12, 2025',
-        amount: 1200,
-        isIncome: false,
-        transactionType: 'expense',
-        icon: Icons.school_rounded,
-        iconColor: Color(0xFF8B5CF6),
-        iconBgColor: Color(0xFFF3E8FF),
-      ),
-    ];
+  void _onTransactionsUpdated() {
+    if (mounted) {
+      setState(() {});
+    }
   }
 
-  double get _totalIncome => 18000.0;
-  double get _totalExpenses => 5550.0;
-  double get _totalBalance => _totalIncome - _totalExpenses;
+  List<TransactionItem> get _allTransactions =>
+      TransactionService.instance.transactions;
+  double get _totalIncome => TransactionService.instance.totalIncome;
+  double get _totalExpenses => TransactionService.instance.totalExpenses;
+  double get _totalBalance => TransactionService.instance.totalBalance;
 
   List<TransactionItem> get _filteredTransactions {
     return _allTransactions.where((txn) {
@@ -199,6 +104,8 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
+      floatingActionButton: _buildAddTransactionFab(),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       body: SafeArea(
         bottom: false,
         child: Center(
@@ -417,28 +324,150 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   // 3. SCREEN TITLE SECTION
   // ==========================================
   Widget _buildScreenTitleSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        Text(
-          'Transactions',
-          style: GoogleFonts.poppins(
-            fontSize: 24,
-            fontWeight: FontWeight.w700,
-            color: AppColors.textPrimary,
-            letterSpacing: -0.4,
-          ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Transactions',
+              style: GoogleFonts.poppins(
+                fontSize: 24,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+                letterSpacing: -0.4,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              'Track your money, build better habits.',
+              style: GoogleFonts.poppins(
+                fontSize: 13,
+                fontWeight: FontWeight.w400,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 2),
-        Text(
-          'Track your money, build better habits.',
-          style: GoogleFonts.poppins(
-            fontSize: 13,
-            fontWeight: FontWeight.w400,
-            color: AppColors.textSecondary,
+        InkWell(
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const AddTransactionScreen(),
+              ),
+            );
+          },
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF2676FD), Color(0xFF1660F8)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF1660F8).withValues(alpha: 0.25),
+                  blurRadius: 8,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.add_rounded,
+                  color: Colors.white,
+                  size: 18,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  'Add',
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ],
+    );
+  }
+
+  /// Floating Action Button for Add Transaction with PennyPal branding & smooth elevation
+  Widget _buildAddTransactionFab() {
+    return Padding(
+      padding: EdgeInsets.only(bottom: widget.showBottomNav ? 70.0 : 80.0),
+      child: Container(
+        height: 48,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(28),
+          gradient: const LinearGradient(
+            colors: [Color(0xFF2676FD), Color(0xFF1660F8)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF1660F8).withValues(alpha: 0.38),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const AddTransactionScreen(),
+                ),
+              );
+            },
+            borderRadius: BorderRadius.circular(28),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 26,
+                    height: 26,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.22),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.add_rounded,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Add Transaction',
+                    style: GoogleFonts.poppins(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                      letterSpacing: 0.1,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 
